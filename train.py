@@ -1,0 +1,78 @@
+import os
+import cv2
+from imageio import imread
+import matplotlib.pyplot as plt
+import numpy as np
+from keras.callbacks import TensorBoard
+from model import *
+
+data_location = ''
+
+training_images_loc = data_location + 'DRIVE/training/images/'
+training_label_loc = data_location + 'DRIVE/training/1st_manual/'
+
+
+train_files = os.listdir(training_images_loc)
+train_data = []
+train_label = []
+
+desired_size = 592
+for i in train_files:
+    im = cv2.imread(training_images_loc + i)
+    label = cv2.imread(training_label_loc + i.split('_')[0] + '_manual1.gif')
+    old_size = im.shape[:2]  # old_size is in (height, width) format
+    delta_w = desired_size - old_size[1]
+    delta_h = desired_size - old_size[0]
+
+    top, bottom = delta_h // 2, delta_h - (delta_h // 2)
+    left, right = delta_w // 2, delta_w - (delta_w // 2)
+
+    color = [0, 0, 0]
+    color2 = [0]
+    new_im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT,
+                                value=color)
+
+    new_label = cv2.copyMakeBorder(label, top, bottom, left, right, cv2.BORDER_CONSTANT,
+                                   value=color2)
+
+    train_data.append(cv2.resize(new_im, (desired_size, desired_size)))
+
+    temp = cv2.resize(new_label, (desired_size, desired_size))
+    _, temp = cv2.threshold(temp, 127, 255, cv2.THRESH_BINARY)
+    train_label.append(temp)
+
+train_data = np.array(train_data)
+train_label = np.array(train_label)
+
+
+x_train = train_data.astype('float32') / 255.
+y_train = train_label.astype('float32') / 255.
+x_train = np.reshape(x_train, (len(x_train), desired_size, desired_size, 3))  # adapt this if using `channels_first` image data format
+y_train = np.reshape(y_train, (len(y_train), desired_size, desired_size, 1))  # adapt this if using `channels_first` im
+
+TensorBoard(log_dir='./autoencoder', histogram_freq=0,
+            write_graph=True, write_images=True)
+
+model = UNET(n_classes = 1)
+lr = 1e-3
+model.compile(optimizer = tf.keras.optimizers.Adam(lr = lr), loss = 'binary_crossentropy', metrics = ['accuracy'])
+#model.build(input_shape = (None, 592, 592, 3))
+#model.summary()
+
+if os.path.exists('./save_weights/unet.h5'):
+    model.load_weights('./save_weights/unet.h5')
+
+history=model.fit(x_train, y_train, epochs=100, batch_size=4,
+                validation_split=0.2,shuffle=True,verbose = 2)
+
+print(history.history.keys())
+
+
+# summarize history for accuracy
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_accuracy'])
+plt.title('SA-UNet Accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'validate'], loc='lower right')
+plt.show()
