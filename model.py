@@ -59,19 +59,19 @@ class UNET(tf.keras.Model):
         super(UNET, self).__init__()
 
         # Encoder
-        self.e1 = EncoderBlock(64)
-        self.e2 = EncoderBlock(128)
-        self.e3 = EncoderBlock(256)
-        self.e4 = EncoderBlock(512)
+        self.e1 = EncoderBlock(16)
+        self.e2 = EncoderBlock(32)
+        self.e3 = EncoderBlock(48)
+        self.e4 = EncoderBlock(64)
 
         # Bridge
-        self.b = ConvBlock(1024)
+        self.b = ConvBlock(128)
 
         # Decoder
-        self.d1 = DecoderBlock(512)
-        self.d2 = DecoderBlock(256)
-        self.d3 = DecoderBlock(128)
-        self.d4 = DecoderBlock(64)
+        self.d1 = DecoderBlock(64)
+        self.d2 = DecoderBlock(48)
+        self.d3 = DecoderBlock(32)
+        self.d4 = DecoderBlock(16)
 
         # Outputs
         if n_classes == 1:

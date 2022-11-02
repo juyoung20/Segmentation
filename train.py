@@ -50,22 +50,27 @@ y_train = train_label.astype('float32') / 255.
 x_train = np.reshape(x_train, (len(x_train), desired_size, desired_size, 3))  # adapt this if using `channels_first` image data format
 y_train = np.reshape(y_train, (len(y_train), desired_size, desired_size, 1))  # adapt this if using `channels_first` im
 
-TensorBoard(log_dir='./autoencoder', histogram_freq=0,
-            write_graph=True, write_images=True)
+#TensorBoard(log_dir='./autoencoder', histogram_freq=0,
+#            write_graph=True, write_images=True)
 
 model = UNET(n_classes = 1)
 lr = 1e-3
 model.compile(optimizer = tf.keras.optimizers.Adam(lr = lr), loss = 'binary_crossentropy', metrics = ['accuracy'])
-#model.build(input_shape = (None, 592, 592, 3))
+#model.build(input_shape = ( None,592, 592, 3))
 #model.summary()
-
 if os.path.exists('./save_weights/unet.h5'):
-    model.load_weights('./save_weights/unet.h5')
+            model.load_weights("./save_weights/unet.h5")
+
 
 history=model.fit(x_train, y_train, epochs=100, batch_size=4,
-                validation_split=0.2,shuffle=True,verbose = 2)
+               validation_split=0.2,shuffle=True,verbose = 2)
 
-print(history.history.keys())
+
+
+#저장
+model.save_weights('./save_weights/unet.h5')
+
+#print(history.history.keys())
 
 
 # summarize history for accuracy
