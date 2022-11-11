@@ -1,9 +1,9 @@
 import os
 import cv2
-from imageio import imread
+import imageio
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.callbacks import TensorBoard
+#from keras.callbacks import TensorBoard
 from model import *
 
 data_location = ''
@@ -19,7 +19,7 @@ test_label = []
 desired_size = 592
 for i in test_files:
     im = cv2.imread(test_images_loc + i)
-    label = cv2.imread(test_label_loc + i.split('_')[0] + '_manual1.gif')
+    label = imageio.v2.imread(test_label_loc + i.split('_')[0] + '_manual1.gif')
     old_size = im.shape[:2]  # old_size is in (height, width) format
     delta_w = desired_size - old_size[1]
     delta_h = desired_size - old_size[0]
@@ -53,3 +53,65 @@ y_test= np.reshape(y_test, (len(y_test), desired_size, desired_size, 1))  # adap
 if os.path.exists('./save_weights/unet.h5'):
     model = UNET.load_weights("./save_weights/unet.h5")
 test = model.evaluate(x_test, y_test, batch_size = 4)
+
+#test = model.evaluate(x_test, y_test, batch_size = 4)
+
+class UNET_test(object):
+    def __init__(self):
+        # create unet
+        n_classes = 1
+        self.unet = UNET(n_classes)
+
+        # compile
+        lr = 1e-3
+        self.unet.compile(optimizer = tf.keras.optimizers.Adam(lr = lr), loss = 'binary_crossentropy', metrics = ['accuracy'])
+
+    def eval(self, x_test, y_test):
+        if os.path.exists('unet_.h5'):
+            self.unet.build(input_shape=(None, 592, 592, 3))
+            self.unet.load_weights('unet_.h5')
+        else:
+            return 0
+
+        pred_seg = self.unet(x_test)
+
+        plt.figure(figsize=(20, 6))
+
+        n = 5
+        ini = random.randint(0, 20-n)
+
+        for i in range(n):
+            # display image
+            
+            ax = plt.subplot(3, n, i + 1)
+            image = cv2.cvtColor(x_test[ini+i], cv2.COLOR_BGR2RGB)
+            plt.imshow(image)
+            plt.title(str(ini+i) + "original")
+            plt.savefig('original.png')
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+
+            # display true segmentation
+            ax = plt.subplot(3, n, i + 1 + n)
+            image = cv2.cvtColor((y_test[ini+i]*255).astype(np.uint8), cv2.COLOR_BGR2RGB)
+            plt.imshow(image)
+            plt.title(str(ini+i) + "true segmentation")
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+
+            # display predictions
+            ax = plt.subplot(3, n, i + 1 + n + n)
+            pred = pred_seg[ini + i].numpy()
+            pred[pred > 0.5]  = 1
+            pred[pred <= 0.5] = 0
+            image = cv2.cvtColor((pred*255).astype(np.uint8), cv2.COLOR_BGR2RGB)
+            plt.imshow(image)
+            plt.title("prediction")
+            plt.savefig('prediction.png')
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+
+        plt.show()
+
+a = UNET_test()
+a.eval(x_test, y_test)
