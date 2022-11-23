@@ -59,9 +59,9 @@ def mixup(input1,input2, target1, target2, gamma = 0.05):
                     input[j][k][i] = input1[j][k][i]*gamma +  input2[j][k][i]* (1 - gamma)
 
     for j in range(h):
-        for k in range(w):
-            if k %2 == 0:                     
-                target[j][k][0] = target1[j][k][0]*gamma +  target2[j][k][0]* (1 - gamma)
+        for k in range(w):                   
+            target[j][k][0] = target1[j][k][0]*gamma +  target2[j][k][0]* (1 - gamma)
+
     return input, target
 
 for i in range(100):

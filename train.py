@@ -3,7 +3,6 @@ import cv2
 import imageio
 import matplotlib.pyplot as plt
 import numpy as np
-#from keras.callbacks import TensorBoard, ModelCheckpoint
 from model import *
 
 data_location = ''
@@ -50,35 +49,43 @@ y_train = train_label.astype('float32') / 255.
 x_train = np.reshape(x_train, (len(x_train), desired_size, desired_size, 3))
 y_train = np.reshape(y_train, (len(y_train), desired_size, desired_size, 1))  
 
-#TensorBoard(log_dir='./autoencoder', histogram_freq=0,
-#            write_graph=True, write_images=True)
+def dice_coef(y_true, y_pred):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    dice = (2. * intersection + K.epsilon()) / (K.sum(y_true_f) + K.sum(y_pred_f) + K.epsilon())
+    return 1 - dice
 
 model = UNET(n_classes = 1)
 lr = 1e-3
 model.compile(optimizer = tf.keras.optimizers.Adam(lr = lr), loss = 'binary_crossentropy', metrics = ['accuracy'])
-#model.build(input_shape = ( None,592, 592, 3))
-#model.summary()
-#if os.path.exists('unet.h5'):
-#            model.load_weights("unet.h5")
 
-
-history=model.fit(x_train, y_train, epochs=100, batch_size=4,
+history=model.fit(x_train, y_train, epochs=150, batch_size=4,
                validation_split=0.2,shuffle=True,verbose = 2)
 
 
 
 #저장
-model.save_weights('.unet.h5')
-
-print(history.history.keys())
+model.save_weights(filepath = 'unet_binary.h5')
 
 
 # summarize history for accuracy
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_accuracy'])
-plt.title('SA-UNet Accuracy')
+plt.title('UNet Accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'validate'], loc='lower right')
 plt.savefig('accuracy.png')
+plt.show()
+
+plt.clf()
+
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('UNet loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'validate'], loc= 'upper right')
+plt.savefig('loss.png')
 plt.show()

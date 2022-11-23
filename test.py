@@ -3,7 +3,9 @@ import cv2
 import imageio
 import matplotlib.pyplot as plt
 import numpy as np
-#from keras.callbacks import TensorBoard
+import random
+from sklearn.metrics import jaccard_score, accuracy_score,classification_report
+
 from model import *
 
 data_location = ''
@@ -67,9 +69,9 @@ class UNET_test(object):
         self.unet.compile(optimizer = tf.keras.optimizers.Adam(lr = lr), loss = 'binary_crossentropy', metrics = ['accuracy'])
 
     def eval(self, x_test, y_test):
-        if os.path.exists('unet_.h5'):
+        if os.path.exists('unet_binary.h5'):
             self.unet.build(input_shape=(None, 592, 592, 3))
-            self.unet.load_weights('unet_.h5')
+            self.unet.load_weights('unet_binary.h5')
         else:
             return 0
 
