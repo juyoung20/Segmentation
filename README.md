@@ -11,6 +11,7 @@ Mix-up을 이용한 데이터 증강기법이 이미지 분할 문제에서 효�
 
 ## 🔷Dataset
 https://drive.grand-challenge.org/
+
 DRIVE 데이터셋에는 20개의 학습데이터와 20개의 테스트데이터가 구성되어있다. 
 
 ## 🔷 실험 결과
