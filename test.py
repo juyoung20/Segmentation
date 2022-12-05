@@ -57,6 +57,12 @@ if os.path.exists('./save_weights/unet.h5'):
 test = model.evaluate(x_test, y_test, batch_size = 4)
 
 #test = model.evaluate(x_test, y_test, batch_size = 4)
+def dice_coef(y_true, y_pred):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    dice = (2. * intersection + K.epsilon()) / (K.sum(y_true_f) + K.sum(y_pred_f) + K.epsilon())
+    return 1 - dice
 
 class UNET_test(object):
     def __init__(self):
@@ -67,7 +73,8 @@ class UNET_test(object):
         # compile
         lr = 1e-3
         self.unet.compile(optimizer = tf.keras.optimizers.Adam(lr = lr), loss = 'binary_crossentropy', metrics = ['accuracy'])
-
+        #self.unet.compile(optimizer = tf.keras.optimizers.Adam(lr = 1e-3), loss = [dice_coef], metrics = ['accuracy'])    
+    
     def eval(self, x_test, y_test):
         if os.path.exists('unet_binary.h5'):
             self.unet.build(input_shape=(None, 592, 592, 3))
@@ -80,8 +87,18 @@ class UNET_test(object):
         plt.figure(figsize=(20, 6))
 
         n = 5
-        ini = random.randint(0, 20-n)
-
+       #ini = random.randint(0, 20-n)
+        ini = 7
+        
+        for i in range(20):
+            y_test_flat = (y_test[i]).astype(np.uint8).flatten()
+            pred = pred_seg[i].numpy()
+            pred[pred >= 0.5]  = 1
+            pred[pred < 0.5] = 0
+            pred_flat = (pred).astype(np.uint8).flatten()
+            j.append(jaccard_score(y_test_flat, pred_flat, pos_label = 1))
+        print("jaccard: ", sum(j) / len(j))
+        
         for i in range(n):
             # display image
             
